@@ -2,26 +2,27 @@
 
 namespace App\Providers;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
+    public function register(): void
     {
-        //
+        $this
+            ->registerGuzzleClient();
     }
 
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot()
+    private function registerGuzzleClient(): self
+    {
+        $this->app->bind(ClientInterface::class, fn (Container $app) => new Client());
+
+        return $this;
+    }
+
+    public function boot(): void
     {
         //
     }

@@ -28,6 +28,15 @@
     </head>
 
     <body>
+        @if (session()->has('successMessage'))
+            <div>
+                {{ session('successMessage') }}
+            </div>
+        @elseif (session()->has('errorMessage'))
+            <div>
+                {{ session('errorMessage') }}
+            </div>
+        @endif
         @yield('body')
 
         @livewireScripts

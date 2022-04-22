@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 abstract class FeatureTestCase extends BaseTestCase
 {
     use CreatesApplication;
+    use Faker;
 
     protected function setUp(): void
     {
