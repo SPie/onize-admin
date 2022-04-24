@@ -21,6 +21,14 @@ trait ApiHelper
         return m::spy(HttpClient::class);
     }
 
+    private function mockHttpClientGet(MockInterface $httpClient, $response, string $path, array $data, array $headers): CompositeExpectation
+    {
+        return $httpClient
+            ->shouldReceive('get')
+            ->with($path, $data, $headers)
+            ->andThrow($response);
+    }
+
     /**
      * @param ResponseInterface|\Exception $response
      */
@@ -86,12 +94,12 @@ trait ApiHelper
     /**
      * @return ApiClient|MockInterface
      */
-    private function createOnizeApiClient(): ApiClient
+    private function createApiClient(): ApiClient
     {
         return m::spy(ApiClient::class);
     }
 
-    private function mockOnizeApiClientRegister(
+    private function mockApiClientRegister(
         MockInterface $onizeApiClient,
         $response,
         string $email,
@@ -100,6 +108,17 @@ trait ApiHelper
         $expectation = $onizeApiClient
             ->shouldReceive('register')
             ->with($email, $password);
+
+        if ($response instanceof \Exception) {
+            return $expectation->andThrow($response);
+        }
+
+        return $expectation->andReturn($response);
+    }
+
+    private function mockApiClientAuthenticatedUser(MockInterface $apiClient, $response): CompositeExpectation
+    {
+        $expectation = $apiClient->shouldReceive('authenticatedUser');
 
         if ($response instanceof \Exception) {
             return $expectation->andThrow($response);

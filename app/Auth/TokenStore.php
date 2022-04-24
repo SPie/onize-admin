@@ -18,4 +18,14 @@ class TokenStore
 
         return $this;
     }
+
+    public function getAuthToken(): ?string
+    {
+        // TODO
+    }
+
+    public function getRefreshToken(): ?string
+    {
+        // TODO
+    }
 }

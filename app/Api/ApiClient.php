@@ -2,6 +2,7 @@
 
 namespace App\Api;
 
+use App\Api\Exceptions\AuthenticationException;
 use App\Api\Exceptions\ClientException;
 use App\Api\Exceptions\ServerException;
 use App\Api\Exceptions\ValidationException;
@@ -10,6 +11,9 @@ use Psr\Http\Message\ResponseInterface;
 
 class ApiClient
 {
+    private const ENDPOINT_REGISTER           = 'users';
+    private const ENDPOINT_AUTHENTICATED_USER = 'me';
+
     public function __construct(private readonly HttpClient $client, private readonly TokenStore $tokenStore)
     {
     }
@@ -50,8 +54,30 @@ class ApiClient
 
     public function register(string $email, string $password): array
     {
-        $response = $this->doPost('users', ['email' => $email, 'password' => $password]);
+        $response = $this->doPost(self::ENDPOINT_REGISTER, ['email' => $email, 'password' => $password]);
 
         return $response['user'];
+    }
+
+    public function authenticatedUser(): array
+    {
+        $response = $this->client->get(
+            self::ENDPOINT_AUTHENTICATED_USER,
+            [],
+            ['x-authorize' => $this->tokenStore->getAuthToken(), 'x-refresh' => $this->tokenStore->getRefreshToken()]
+        );
+        if ($response->getStatusCode() === 401) {
+            throw new AuthenticationException();
+        }
+        if ($response->getStatusCode() === 400) {
+            throw new ClientException();
+        }
+        if ($response->getStatusCode() === 500) {
+            throw new ServerException();
+        }
+
+        $responseBody = \json_decode($response->getBody(), true);
+
+        return $responseBody['user'];
     }
 }

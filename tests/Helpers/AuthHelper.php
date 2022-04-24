@@ -43,4 +43,18 @@ trait AuthHelper
             ->with($authToken, $refreshToken)
             ->once();
     }
+
+    private function mockTokenStoreGetAuthToken(MockInterface $tokenStore, ?string $authToken): CompositeExpectation
+    {
+        return $tokenStore
+            ->shouldReceive('getAuthToken')
+            ->andReturn($authToken);
+    }
+
+    private function mockTokenStoreGetRefreshToken(MockInterface $tokenStore, ?string $refreshToken): CompositeExpectation
+    {
+        return $tokenStore
+            ->shouldReceive('getRefreshToken')
+            ->andReturn($refreshToken);
+    }
 }

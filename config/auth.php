@@ -61,7 +61,7 @@ return [
 
     'providers' => [
         'users' => [
-            // TODO
+            'driver' => 'api',
         ],
 
         // 'users' => [

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Users;
 
+use App\Api\Exceptions\AuthenticationException;
 use App\Api\Exceptions\ValidationException;
 use App\Api\ApiClient;
 use App\Users\UserFactory;
@@ -18,7 +19,7 @@ class UserManagerTest extends TestCase
     private function getUserManager(ApiClient $onizeApiClient = null, UserFactory $userFactory = null): UserManager
     {
         return new UserManager(
-            $onizeApiClient ?: $this->createOnizeApiClient(),
+            $onizeApiClient ?: $this->createApiClient(),
             $userFactory ?: $this->createUserFactory()
         );
     }
@@ -28,8 +29,8 @@ class UserManagerTest extends TestCase
         $email = $this->getFaker()->safeEmail;
         $password = $this->getFaker()->password;
         $uuid = $this->getFaker()->uuid;
-        $apiClient = $this->createOnizeApiClient();
-        $this->mockOnizeApiClientRegister(
+        $apiClient = $this->createApiClient();
+        $this->mockApiClientRegister(
             $apiClient,
             $withException ? $this->createValidationException() : ['uuid' => $uuid, 'email' => $email],
             $email,
@@ -59,5 +60,38 @@ class UserManagerTest extends TestCase
         $this->expectException(ValidationException::class);
 
         $userManager->register($email, $password);
+    }
+
+    private function setUpAuthenticatedUserTest(bool $withAuthenticatedUser = true): array
+    {
+        $uuid = $this->getFaker()->uuid;
+        $email = $this->getFaker()->safeEmail;
+        $user = $this->createUser();
+        $userFactory = $this->createUserFactory();
+        $this->mockUserFactoryCreate($userFactory, $user, $uuid, $email);
+        $apiClient = $this->createApiClient();
+        $this->mockApiClientAuthenticatedUser(
+            $apiClient,
+            $withAuthenticatedUser ? ['uuid' => $uuid, 'email' => $email] : new AuthenticationException()
+        );
+        $userManager = $this->getUserManager($apiClient, $userFactory);
+
+        return [$userManager, $user];
+    }
+
+    public function testAuthenticatedUser(): void
+    {
+        /** @var UserManager $userManager */
+        [$userManager, $user] = $this->setUpAuthenticatedUserTest();
+
+        $this->assertEquals($user, $userManager->authenticatedUser());
+    }
+
+    public function testAuthenticatedUserWithoutAuthenticatedUser(): void
+    {
+        /** @var UserManager $userManager */
+        [$userManager] = $this->setUpAuthenticatedUserTest(withAuthenticatedUser: false);
+
+        $this->assertNull($userManager->authenticatedUser());
     }
 }

@@ -30,6 +30,13 @@ trait UsersHelper
             ->andThrow($user);
     }
 
+    private function mockUserManagerAuthenticatedUser(MockInterface $userManager, ?User $user): CompositeExpectation
+    {
+        return $userManager
+            ->shouldReceive('authenticatedUser')
+            ->andReturn($user);
+    }
+
     private function createUser(string $uuid = null, string $email = null): User
     {
         return new User(

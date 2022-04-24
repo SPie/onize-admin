@@ -16,7 +16,7 @@ class HttpClientTest extends TestCase
         return new HttpClient($guzzle ?: $this->createGuzzleClient());
     }
 
-    private function setUpPostTest(bool $withInvalidResponse = false): array
+    private function setUpPostTest(): array
     {
         $path = $this->getFaker()->word;
         $data = [$this->getFaker()->word => $this->getFaker()->word];
@@ -38,11 +38,24 @@ class HttpClientTest extends TestCase
         $this->assertEquals($response, $httpClient->post($path, $data, $headers));
     }
 
-    public function testPostWithInvalidResponse(): void
+    private function setUpGetTest(): array
+    {
+        $path = $this->getFaker()->word;
+        $data = [$this->getFaker()->word => $this->getFaker()->word];
+        $headers = [$this->getFaker()->word => $this->getFaker()->word];
+        $response = $this->createResponse();
+        $guzzle = $this->createGuzzleClient();
+        $this->mockGuzzleClientRequest($guzzle, $response, 'GET', $path, ['query' => $data, 'headers' => $headers]);
+        $httpClient = $this->getHttpClient($guzzle);
+
+        return [$httpClient, $path, $data, $headers, $response];
+    }
+
+    public function testGet(): void
     {
         /** @var HttpClient $httpClient */
-        [$httpClient, $path, $data, $headers] = $this->setUpPostTest(withInvalidResponse: true);
+        [$httpClient, $path, $data, $headers, $response] = $this->setUpGetTest();
 
-        $httpClient->post($path, $data, $headers);
+        $this->assertEquals($response, $httpClient->get($path, $data, $headers));
     }
 }

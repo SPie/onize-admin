@@ -3,6 +3,7 @@
 namespace App\Users;
 
 use App\Api\ApiClient;
+use App\Api\Exceptions\AuthenticationException;
 
 class UserManager
 {
@@ -17,6 +18,20 @@ class UserManager
         return $this->userFactory->create(
             $response[User::PROPERTY_UUID],
             $response[User::PROPERTY_EMAIL]
+        );
+    }
+
+    public function authenticatedUser(): ?User
+    {
+        try {
+            $response = $this->onizeApiClient->authenticatedUser();
+        } catch (AuthenticationException $e) {
+            return null;
+        }
+
+        return $this->userFactory->create(
+            $response[User::PROPERTY_UUID],
+            $response[User::PROPERTY_EMAIL],
         );
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Api;
 
+use App\Api\Exceptions\AuthenticationException;
 use App\Api\Exceptions\ClientException;
 use App\Api\Exceptions\ServerException;
 use App\Api\Exceptions\ValidationException;
@@ -186,5 +187,78 @@ class ApiClientTest extends TestCase
         $apiClient->register($email, $password);
 
         $tokenStore->shouldNotHaveReceived('storeTokens');
+    }
+
+    private function setUpAuthenticatedUserTest(
+        bool $withAuthenticatedUser = true,
+        bool $withClientException = false,
+        bool $withServerException = false
+    ): array {
+        $user = [
+            'uuid'  => $this->getFaker()->uuid,
+            'email' => $this->getFaker()->safeEmail,
+        ];
+        $authToken = $this->getFaker()->word;
+        $refreshToken = $this->getFaker()->word;
+        $tokenStore = $this->createTokenStore();
+        $this->mockTokenStoreGetAuthToken($tokenStore, $authToken);
+        $this->mockTokenStoreGetRefreshToken($tokenStore, $refreshToken);
+        $body = ['user' => $user];
+        $status = 200;
+        if (!$withAuthenticatedUser) {
+            $status = 401;
+        }
+        if ($withClientException) {
+            $status = 400;
+        }
+        if ($withServerException) {
+            $status = 500;
+        }
+        $response = $this->createResponse();
+        $this->mockResponseGetStatusCode($response, $status);
+        $this->mockResponseGetBody($response, \json_encode($body));
+        $client = $this->createHttpClient();
+        $this->mockHttpClientGet($client, $response, 'me', [], ['x-authorize' => $authToken, 'x-refresh' => $refreshToken]);
+        $apiClient = $this->getApiClient($client, $tokenStore);
+
+        return [$apiClient, $user];
+    }
+
+    public function testAuthenticatedUser(): void
+    {
+        /** @var ApiClient $apiClient */
+        [$apiClient, $user] = $this->setUpAuthenticatedUserTest();
+
+        $this->assertEquals($user, $apiClient->authenticatedUser());
+    }
+
+    public function testAuthenticatedUserWithoutAuthenticatedUser(): void
+    {
+        /** @var ApiClient $apiClient */
+        [$apiClient] = $this->setUpAuthenticatedUserTest(withAuthenticatedUser: false);
+
+        $this->expectException(AuthenticationException::class);
+
+        $apiClient->authenticatedUser();
+    }
+
+    public function testAuthenticatedUserWithClientException(): void
+    {
+        /** @var ApiClient $apiClient */
+        [$apiClient] = $this->setUpAuthenticatedUserTest(withClientException: true);
+
+        $this->expectException(ClientException::class);
+
+        $apiClient->authenticatedUser();
+    }
+
+    public function testAuthenticatedUserWithServerException(): void
+    {
+        /** @var ApiClient $apiClient */
+        [$apiClient] = $this->setUpAuthenticatedUserTest(withServerException: true);
+
+        $this->expectException(ServerException::class);
+
+        $apiClient->authenticatedUser();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Users\ApiUserProvider;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -31,6 +32,6 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        $this->app->get('auth')->provider('api', fn () => $this->app->get(ApiUserProvider::class));
     }
 }
