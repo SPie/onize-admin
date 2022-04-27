@@ -81,55 +81,56 @@ final class RegisterTest extends FeatureTestCase
             $register->passwordConfirm = $passwordConfirm;
         }
 
-        return [$register, $response, $authManager, $user];
+        return [$register, $userManager, $authManager, $authManager, $user];
     }
 
     public function testRegister(): void
     {
         /** @var Register $register */
-        [$register, $response, $authManager, $user] = $this->setUpRegisterTest();
+        [$register, $userManager, $authManager, $authManager, $user] = $this->setUpRegisterTest();
 
-        $this->assertEquals($response, $register->register());
+        $register->register($userManager, $authManager);
+
         $this->assertAuthManagerLoginUser($authManager, $user);
     }
 
     public function testRegisterWithoutRequiredFields(): void
     {
         /** @var Register $register */
-        [$register] = $this->setUpRegisterTest(withRequiredFields: false);
+        [$register, $userManager, $authManager] = $this->setUpRegisterTest(withRequiredFields: false);
 
         $this->expectException(ValidationException::class);
 
-        $register->register();
+        $register->register($userManager, $authManager);
     }
 
     public function testRegisterWithoutValidEmail(): void
     {
         /** @var Register $register */
-        [$register] = $this->setUpRegisterTest(withValidEmail: false);
+        [$register, $userManager, $authManager] = $this->setUpRegisterTest(withValidEmail: false);
 
         $this->expectException(ValidationException::class);
 
-        $register->register();
+        $register->register($userManager, $authManager);
     }
 
     public function testRegisterWithoutInvalidPassword(): void
     {
         /** @var Register $register */
-        [$register] = $this->setUpRegisterTest(withValidPassword: false);
+        [$register, $userManager, $authManager] = $this->setUpRegisterTest(withValidPassword: false);
 
         $this->expectException(ValidationException::class);
 
-        $register->register();
+        $register->register($userManager, $authManager);
     }
 
     public function testRegisterWithoutMatchingPasswords(): void
     {
         /** @var Register $register */
-        [$register] = $this->setUpRegisterTest(withMatchingPasswords: false);
+        [$register, $userManager, $authManager] = $this->setUpRegisterTest(withMatchingPasswords: false);
 
         $this->expectException(ValidationException::class);
 
-        $register->register();
+        $register->register($userManager, $authManager);
     }
 }

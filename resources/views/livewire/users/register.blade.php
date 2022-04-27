@@ -1,12 +1,36 @@
 @section('title', 'Register')
 
 <div>
-    <div class="min-h-screen bg-white flex">
+    <div class="">
+        <h2>{{ __('title.register') }}</h2>
 
-        <div class="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
-            <div class="mx-auto w-full max-w-sm">
+        <div>
+            <form wire:submit.prevent="register">
+                <div>
+                    <div>
+                        <label for="email">{{ __('label.email') }}</label>
+                        <div>
+                            <input wire:model="email" type="email" id="email" required="required" />
+                        </div>
+                    </div>
+                    <div>
+                        <label for="password">{{ __('label.password') }}</label>
+                        <div>
+                            <input wire:model="password" type="password" id="password" required="required" />
+                        </div>
+                    </div>
+                    <div>
+                        <label for="password">{{ __('label.passwordConfirm') }}</label>
+                        <div>
+                            <input wire:model="passwordConfirm" type="password" id="passwordConfirm" required="required" />
+                        </div>
+                    </div>
 
-            </div>
+                    <div>
+                        <button type="submit">{{ __('button.register') }}</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
