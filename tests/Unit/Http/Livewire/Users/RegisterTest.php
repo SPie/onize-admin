@@ -43,6 +43,7 @@ final class RegisterTest extends FeatureTestCase
     public function testRender(): void
     {
         $view = $this->createView();
+        $this->mockViewLayout($view, 'layouts.signup')->once();
         $viewFactory = $this->createViewFactory();
         $this->mockViewFactoryMake($viewFactory, $view, 'livewire.users.register');
 

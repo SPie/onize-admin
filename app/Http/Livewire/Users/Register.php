@@ -20,7 +20,7 @@ class Register extends Component
 
     public function render(Factory $viewFactory): View
     {
-        return $viewFactory->make('livewire.users.register');
+        return $viewFactory->make('livewire.users.register')->layout('layouts.signup');
     }
 
     public function register(UserManager $userManager, AuthManager $authManager): void

@@ -47,6 +47,14 @@ trait LaravelHelpers
         return m::spy(View::class);
     }
 
+    private function mockViewLayout(MockInterface $view, string $layout): CompositeExpectation
+    {
+        return $view
+            ->shouldReceive('layout')
+            ->with($layout)
+            ->andReturn($view);
+    }
+
     /**
      * @return LaravelRedirector|MockInterface
      */

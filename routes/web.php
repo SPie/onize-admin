@@ -17,6 +17,8 @@ use Illuminate\Routing\Router;
  * @var Router $router
  */
 
-$router->view('/', 'welcome')->name('home');
-
 $router->get('/register')->name(Register::NAME_REGISTER)->uses(Register::class);
+
+$router->group(['middleware' => ['auth']], function (Router $router) {
+    $router->view('/', 'welcome')->name('home');
+});
