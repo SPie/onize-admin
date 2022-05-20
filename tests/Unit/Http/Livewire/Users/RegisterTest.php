@@ -2,13 +2,8 @@
 
 namespace Tests\Unit\Http\Livewire\Users;
 
-use App\Auth\AuthManager;
 use App\Http\Livewire\Users\Register;
-use App\Users\UserManager;
 use Illuminate\Validation\ValidationException;
-use Livewire\Redirector;
-use Mockery as m;
-use Mockery\MockInterface;
 use Tests\FeatureTestCase;
 use Tests\Helpers\AuthHelper;
 use Tests\Helpers\LaravelHelpers;
@@ -20,24 +15,9 @@ final class RegisterTest extends FeatureTestCase
     use LaravelHelpers;
     use UsersHelper;
 
-    /**
-     * @return Register|MockInterface
-     */
-    private function getRegister(
-        UserManager $userManager = null,
-        AuthManager $authManager = null,
-        Redirector $redirector = null
-    ): Register {
-        $register = m::mock(Register::class)
-            ->shouldAllowMockingProtectedMethods()
-            ->makePartial();
-        $register->mount(
-            $userManager ?: $this->createUserManager(),
-            $authManager ?: $this->createAuthManager(),
-            $redirector ?: $this->createLivewireRedirector()
-        );
-
-        return $register;
+    private function getRegister(): Register
+    {
+        return new Register();
     }
 
     public function testRender(): void
@@ -72,10 +52,7 @@ final class RegisterTest extends FeatureTestCase
         $userManager = $this->createUserManager();
         $this->mockUserManagerRegister($userManager, $user, $email, $password);
         $authManager = $this->createAuthManager();
-        $response = $this->createRedirectResponse();
-        $redirector = $this->createLivewireRedirector();
-        $this->mockLivewireRedirectorRoute($redirector, $response, 'home');
-        $register = $this->getRegister($userManager, $authManager, $redirector);
+        $register = $this->getRegister();
         if ($withRequiredFields) {
             $register->email = $email;
             $register->password = $password;

@@ -37,6 +37,14 @@ trait UsersHelper
             ->andReturn($user);
     }
 
+    private function mockUserManagerLogin(MockInterface $userManager, ?User $user, string $email, string $password): CompositeExpectation
+    {
+        return $userManager
+            ->shouldReceive('login')
+            ->with($email, $password)
+            ->andReturn($user);
+    }
+
     private function createUser(string $uuid = null, string $email = null): User
     {
         return new User(

@@ -37,4 +37,38 @@ final class TokenStoreTest extends TestCase
 
         $this->assertSessionPut($session, ['authToken' => $authToken, 'refreshToken' => null]);
     }
+
+    public function testGetAuthToken(): void
+    {
+        $authToken = $this->getFaker()->word;
+        $session = $this->createSession();
+        $this->mockSessionGet($session, $authToken, 'authToken');
+
+        $this->assertEquals($authToken, $this->getTokenStore($session)->getAuthToken());
+    }
+
+    public function testGetAuthTokenWithoutAuthToken(): void
+    {
+        $session = $this->createSession();
+        $this->mockSessionGet($session, null, 'authToken');
+
+        $this->assertNull($this->getTokenStore($session)->getAuthToken());
+    }
+
+    public function testGetRefreshToken(): void
+    {
+        $refreshToken = $this->getFaker()->word;
+        $session = $this->createSession();
+        $this->mockSessionGet($session, $refreshToken, 'refreshToken');
+
+        $this->assertEquals($refreshToken, $this->getTokenStore($session)->getRefreshToken());
+    }
+
+    public function testGetRefreshWithoutAuthToken(): void
+    {
+        $session = $this->createSession();
+        $this->mockSessionGet($session, null, 'refreshToken');
+
+        $this->assertNull($this->getTokenStore($session)->getRefreshToken());
+    }
 }

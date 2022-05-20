@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Livewire\Auth\Login;
 use App\Http\Livewire\Users\Register;
 use Illuminate\Routing\Router;
 
@@ -18,6 +19,8 @@ use Illuminate\Routing\Router;
  */
 
 $router->get('/register')->name(Register::NAME_REGISTER)->uses(Register::class);
+
+$router->get('/login')->name(Login::NAME_LOGIN)->uses(Login::class);
 
 $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->view('/', 'welcome')->name('home');

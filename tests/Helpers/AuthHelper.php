@@ -28,6 +28,22 @@ trait AuthHelper
             ->once();
     }
 
+    private function mockAuthManagerLogin(MockInterface $authManager, $user, string $email, string $password): CompositeExpectation
+    {
+        return $authManager
+            ->shouldReceive('login')
+            ->with($email, $password)
+            ->andThrow($user);
+    }
+
+    private function assertAuthManagerLogin(MockInterface $authManager, string $email, string $password): VerificationDirector
+    {
+        return $authManager
+            ->shouldHaveReceived('login')
+            ->with($email, $password)
+            ->once();
+    }
+
     /**
      * @return TokenStore|MockInterface
      */

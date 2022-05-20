@@ -3,16 +3,24 @@
 namespace App\Api;
 
 use App\Api\Exceptions\AuthenticationException;
+use App\Api\Exceptions\AuthorizationException;
 use App\Api\Exceptions\ClientException;
 use App\Api\Exceptions\ServerException;
 use App\Api\Exceptions\ValidationException;
 use App\Auth\TokenStore;
+use App\Users\User;
 use Psr\Http\Message\ResponseInterface;
 
 class ApiClient
 {
     private const ENDPOINT_REGISTER           = 'users';
     private const ENDPOINT_AUTHENTICATED_USER = 'me';
+    private const ENDPOINT_AUTHENTICATE       = 'auth';
+
+    private const HEADER_AUTH_TOKEN    = 'x-authorize';
+    private const HEADER_REFRESH_TOKEN = 'x-refresh';
+
+    private const RESPONSE_USER = 'user';
 
     public function __construct(private readonly HttpClient $client, private readonly TokenStore $tokenStore)
     {
@@ -31,6 +39,9 @@ class ApiClient
         if ($response->getStatusCode() === 500) {
             throw new ServerException();
         }
+        if ($response->getStatusCode() === 403) {
+            throw new AuthorizationException();
+        }
 
         $this->storeAuthTokens($response);
 
@@ -39,8 +50,8 @@ class ApiClient
 
     private function storeAuthTokens(ResponseInterface $response): self
     {
-        $authTokenHeaders = $response->getHeader('x-authorize');
-        $refreshTokenHeaders = $response->getHeader('x-refresh');
+        $authTokenHeaders = $response->getHeader(self::HEADER_AUTH_TOKEN);
+        $refreshTokenHeaders = $response->getHeader(self::HEADER_REFRESH_TOKEN);
 
         $authToken = !empty($authTokenHeaders) ? \explode(' ', \reset($authTokenHeaders))[1] : null;
         $refreshToken = !empty($refreshTokenHeaders) ? \explode(' ', \reset($refreshTokenHeaders))[1] : null;
@@ -54,9 +65,22 @@ class ApiClient
 
     public function register(string $email, string $password): array
     {
-        $response = $this->doPost(self::ENDPOINT_REGISTER, ['email' => $email, 'password' => $password]);
+        $response = $this->doPost(
+            self::ENDPOINT_REGISTER,
+            [User::PROPERTY_EMAIL => $email, User::PROPERTY_PASSWORD => $password]
+        );
 
-        return $response['user'];
+        return $response[self::RESPONSE_USER];
+    }
+
+    public function authenticate(string $email, string $password): array
+    {
+        $response = $this->doPost(
+            self::ENDPOINT_AUTHENTICATE,
+            [User::PROPERTY_EMAIL => $email, User::PROPERTY_PASSWORD => $password]
+        );
+
+        return $response[self::RESPONSE_USER];
     }
 
     public function authenticatedUser(): array
@@ -64,7 +88,12 @@ class ApiClient
         $response = $this->client->get(
             self::ENDPOINT_AUTHENTICATED_USER,
             [],
-            ['x-authorize' => $this->tokenStore->getAuthToken(), 'x-refresh' => $this->tokenStore->getRefreshToken()]
+            [
+                'Content-Type'             => 'application/json',
+                'Accept'                   => 'application/json',
+                self::HEADER_AUTH_TOKEN    => \sprintf('Bearer %s', $this->tokenStore->getAuthToken()),
+                self::HEADER_REFRESH_TOKEN => $this->tokenStore->getRefreshToken(),
+            ]
         );
         if ($response->getStatusCode() === 401) {
             throw new AuthenticationException();
@@ -78,6 +107,6 @@ class ApiClient
 
         $responseBody = \json_decode($response->getBody(), true);
 
-        return $responseBody['user'];
+        return $responseBody[self::RESPONSE_USER];
     }
 }

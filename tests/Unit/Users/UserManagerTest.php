@@ -3,6 +3,7 @@
 namespace Tests\Unit\Users;
 
 use App\Api\Exceptions\AuthenticationException;
+use App\Api\Exceptions\AuthorizationException;
 use App\Api\Exceptions\ValidationException;
 use App\Api\ApiClient;
 use App\Users\UserFactory;
@@ -93,5 +94,41 @@ class UserManagerTest extends TestCase
         [$userManager] = $this->setUpAuthenticatedUserTest(withAuthenticatedUser: false);
 
         $this->assertNull($userManager->authenticatedUser());
+    }
+
+    private function setUpLoginTest(bool $validCredentials = true): array
+    {
+        $email = $this->getFaker()->safeEmail;
+        $password = $this->getFaker()->password;
+        $uuid = $this->getFaker()->uuid;
+        $user = $this->createUser();
+        $userFactory = $this->createUserFactory();
+        $this->mockUserFactoryCreate($userFactory, $user, $uuid, $email);
+        $apiClient = $this->createApiClient();
+        $this->mockApiClientAuthenticate(
+            $apiClient,
+            $validCredentials ? ['uuid' => $uuid, 'email' => $email] : new AuthorizationException(),
+            $email,
+            $password
+        );
+        $userManager = $this->getUserManager($apiClient, $userFactory);
+
+        return [$userManager, $email, $password, $user];
+    }
+
+    public function testLogin(): void
+    {
+        /** @var UserManager $userManager */
+        [$userManager, $email, $password, $user] = $this->setUpLoginTest();
+
+        $this->assertEquals($user, $userManager->login($email, $password));
+    }
+
+    public function testLoginWithInvalidCredentials(): void
+    {
+        /** @var UserManager $userManager */
+        [$userManager, $email, $password] = $this->setUpLoginTest(validCredentials: false);
+
+        $this->assertNull($userManager->login($email, $password));
     }
 }

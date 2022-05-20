@@ -2,10 +2,22 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Livewire\Auth\Login;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
+use Illuminate\Contracts\Auth\Factory as Auth;
+use Illuminate\Contracts\Routing\UrlGenerator;
 
 class Authenticate extends Middleware
 {
+    private UrlGenerator $urlGenerator;
+
+    public function __construct(Auth $auth, UrlGenerator $urlGenerator)
+    {
+        parent::__construct($auth);
+
+        $this->urlGenerator = $urlGenerator;
+    }
+
     /**
      * Get the path the user should be redirected to when they are not authenticated.
      *
@@ -14,8 +26,6 @@ class Authenticate extends Middleware
      */
     protected function redirectTo($request)
     {
-        if (! $request->expectsJson()) {
-            return route('login');
-        }
+        return $this->urlGenerator->route(Login::NAME_LOGIN);
     }
 }

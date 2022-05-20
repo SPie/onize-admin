@@ -21,11 +21,11 @@ class TokenStore
 
     public function getAuthToken(): ?string
     {
-        // TODO
+        return $this->session->get('authToken');
     }
 
     public function getRefreshToken(): ?string
     {
-        // TODO
+        return $this->session->get('refreshToken');
     }
 }

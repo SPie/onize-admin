@@ -127,6 +127,19 @@ trait ApiHelper
         return $expectation->andReturn($response);
     }
 
+    private function mockApiClientAuthenticate(MockInterface $apiClient, $response, string $email, string $password): CompositeExpectation
+    {
+        $expectation = $apiClient
+            ->shouldReceive('authenticate')
+            ->with($email, $password);
+
+        if ($response instanceof \Exception) {
+            return $expectation->andThrow($response);
+        }
+
+        return $expectation->andReturn($response);
+    }
+
     /**
      * @return ValidationException|MockInterface
      */

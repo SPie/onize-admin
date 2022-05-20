@@ -3,11 +3,15 @@
 namespace Tests\Helpers;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Livewire\Redirector as LaravelRedirector;
 use Mockery as m;
 use Mockery\VerificationDirector;
@@ -75,6 +79,22 @@ trait LaravelHelpers
     }
 
     /**
+     * @return UrlGenerator|MockInterface
+     */
+    private function createUrlGenerator(): UrlGenerator
+    {
+        return m::spy(UrlGenerator::class);
+    }
+
+    private function mockUrlGeneratorRoute(MockInterface $urlGenerator, string $url, string $routeName): CompositeExpectation
+    {
+        return $urlGenerator
+            ->shouldReceive('route')
+            ->with($routeName)
+            ->andReturn($url);
+    }
+
+    /**
      * @return RedirectResponse|MockInterface
      */
     private function createRedirectResponse(): RedirectResponse
@@ -98,6 +118,14 @@ trait LaravelHelpers
             ->once();
     }
 
+    private function mockSessionGet(MockInterface $session, $item, string $key): CompositeExpectation
+    {
+        return $session
+            ->shouldReceive('get')
+            ->with($key)
+            ->andReturn($item);
+    }
+
     /**
      * @return StatefulGuard|MockInterface
      */
@@ -112,5 +140,36 @@ trait LaravelHelpers
             ->shouldHaveReceived('login')
             ->with($user)
             ->once();
+    }
+
+    private function mockStatefulGuardAttempt(MockInterface $statefulGuard, bool $valid, array $credentials): CompositeExpectation
+    {
+        return $statefulGuard
+            ->shouldReceive('attempt')
+            ->with($credentials)
+            ->andReturn($valid);
+    }
+
+    private function mockStatefulGuardUser(MockInterface $statefulGuard, ?Authenticatable $user): CompositeExpectation
+    {
+        return $statefulGuard
+            ->shouldReceive('user')
+            ->andReturn($user);
+    }
+
+    /**
+     * @return AuthFactory|MockInterface
+     */
+    private function createAuthFactory(): AuthFactory
+    {
+        return m::spy(AuthFactory::class);
+    }
+
+    /**
+     * @return Request|MockInterface
+     */
+    private function createRequest(): Request
+    {
+        return m::spy(Request::class);
     }
 }

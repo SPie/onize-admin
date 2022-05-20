@@ -6,14 +6,15 @@ use Illuminate\Contracts\Auth\Authenticatable;
 
 class User implements Authenticatable
 {
-    public const PROPERTY_UUID  = 'uuid';
-    public const PROPERTY_EMAIL = 'email';
+    public const PROPERTY_UUID     = 'uuid';
+    public const PROPERTY_EMAIL    = 'email';
+    public const PROPERTY_PASSWORD = 'password';
 
     private ?string $authToken;
 
     private ?string $refreshToken;
 
-    public function __construct(private string $uuid, private string $email)
+    public function __construct(private readonly string $uuid, private readonly string $email)
     {
         $this->authToken = null;
         $this->refreshToken = null;

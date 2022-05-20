@@ -20,7 +20,13 @@ final class ApiUserProvider implements UserProvider
             $this->user = $this->userManager->authenticatedUser();
         }
 
-        return ($this->user && $this->user->getAuthIdentifier() === $identifier) ? $this->user : null;
+        if ($this->user && $this->user->getAuthIdentifier() !== $identifier) {
+            $this->user = null;
+
+            return null;
+        }
+
+        return $this->user;
     }
 
     public function retrieveByToken($identifier, $token): ?Authenticatable
@@ -33,13 +39,20 @@ final class ApiUserProvider implements UserProvider
         // Not used
     }
 
-    public function retrieveByCredentials(array $credentials): ?Authenticatable
+    public function retrieveByCredentials(array $credentials): ?User
     {
-        // TODO: Implement retrieveByCredentials() method.
+        if (empty($credentials[User::PROPERTY_EMAIL]) || empty($credentials[User::PROPERTY_PASSWORD])) {
+            return null;
+        }
+
+        $this->user = $this->userManager->login($credentials[User::PROPERTY_EMAIL], $credentials[User::PROPERTY_PASSWORD]);
+
+        return $this->user;
     }
 
-    public function validateCredentials(Authenticatable $user, array $credentials): bool
+    public function validateCredentials(Authenticatable|User $user, array $credentials): bool
     {
-        // TODO: Implement validateCredentials() method.
+        // Credentials are checked by retrieveByCredentials
+        return $this->user === $user && $user->getEmail() === $credentials[User::PROPERTY_EMAIL];
     }
 }
