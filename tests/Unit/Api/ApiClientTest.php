@@ -27,42 +27,18 @@ class ApiClientTest extends TestCase
         );
     }
 
-    private function setUpRegisterTest(
-        bool $withValidationException = false,
-        bool $withClientError = false,
-        bool $withServerError = false,
-        bool $withRefreshToken = true,
-        bool $withAuthToken = true
-    ): array {
+    private function setUpRegisterTest(bool $withRefreshToken = true, bool $withAuthToken = true): array
+    {
         $email = $this->getFaker()->safeEmail;
         $password = $this->getFaker()->password;
         $uuid = $this->getFaker()->uuid;
-        $errorField = $this->getFaker()->word;
-        $errorMessage = $this->getFaker()->word;
-        $body = \json_encode(
-            $withValidationException
-                ? [
-                    'errors' => [
-                        $errorField => [$errorMessage],
-                    ],
-                ]
-                : [
-                    'user' => [
-                        'uuid'  => $uuid,
-                        'email' => $email,
-                    ],
-                ]
-        );
+        $body = \json_encode([
+            'user' => [
+                'uuid'  => $uuid,
+                'email' => $email,
+            ],
+        ]);
         $status = 200;
-        if ($withClientError) {
-            $status = 400;
-        }
-        if ($withValidationException) {
-            $status = 422;
-        }
-        if ($withServerError) {
-            $status = 500;
-        }
         $authToken = $this->getFaker()->word;
         $refreshToken = $this->getFaker()->word;
         $response = $this->createResponse();
@@ -78,12 +54,16 @@ class ApiClientTest extends TestCase
             [
                 'email'    => $email,
                 'password' => $password,
+            ],
+            [
+                'Content-Type' => 'application/json',
+                'Accept'       => 'application/json',
             ]
         );
         $tokenStore = $this->createTokenStore();
         $apiClient = $this->getApiClient($client, $tokenStore);
 
-        return [$apiClient, $email, $password, $uuid, $errorField, $errorMessage, $tokenStore, $authToken, $refreshToken];
+        return [$apiClient, $email, $password, $uuid, $tokenStore, $authToken, $refreshToken];
     }
 
     public function testRegister(): void
@@ -100,42 +80,6 @@ class ApiClientTest extends TestCase
         );
     }
 
-    public function testRegisterWithValidationErrors(): void
-    {
-        /** @var ApiClient $apiClient */
-        [$apiClient, $email, $password, $uuid, $errorField, $errorMessage] = $this->setUpRegisterTest(withValidationException: true);
-
-        try {
-            $apiClient->register($email, $password);
-
-            $this->fail('ValidationException expected.');
-        } catch (ValidationException $e) {
-            $this->assertEquals([$errorField => [$errorMessage]], $e->getErrors());
-        } catch (\Exception $e) {
-            $this->fail('ValidationException expected.');
-        }
-    }
-
-    public function testRegisterWithRequestException(): void
-    {
-        /** @var ApiClient $apiClient */
-        [$apiClient, $email, $password] = $this->setUpRegisterTest(withClientError: true);
-
-        $this->expectException(ClientException::class);
-
-        $apiClient->register($email, $password);
-    }
-
-    public function testRegisterWithServerException(): void
-    {
-        /** @var ApiClient $apiClient */
-        [$apiClient, $email, $password] = $this->setUpRegisterTest(withServerError: true);
-
-        $this->expectException(ServerException::class);
-
-        $apiClient->register($email, $password);
-    }
-
     public function testRegisterWithStoreTokens(): void
     {
         /** @var ApiClient $apiClient */
@@ -143,8 +87,6 @@ class ApiClientTest extends TestCase
             $email,
             $password,
             $uuid,
-            $errorField,
-            $errorMessage,
             $tokenStore,
             $authToken,
             $refreshToken
@@ -162,8 +104,6 @@ class ApiClientTest extends TestCase
             $email,
             $password,
             $uuid,
-            $errorField,
-            $errorMessage,
             $tokenStore,
             $authToken,
         ] = $this->setUpRegisterTest(withRefreshToken: false);
@@ -180,8 +120,6 @@ class ApiClientTest extends TestCase
             $email,
             $password,
             $uuid,
-            $errorField,
-            $errorMessage,
             $tokenStore,
         ] = $this->setUpRegisterTest(withRefreshToken: false, withAuthToken: false);
 
@@ -190,11 +128,8 @@ class ApiClientTest extends TestCase
         $tokenStore->shouldNotHaveReceived('storeTokens');
     }
 
-    private function setUpAuthenticatedUserTest(
-        bool $withAuthenticatedUser = true,
-        bool $withClientException = false,
-        bool $withServerException = false
-    ): array {
+    private function setUpAuthenticatedUserTest(): array
+    {
         $user = [
             'uuid'  => $this->getFaker()->uuid,
             'email' => $this->getFaker()->safeEmail,
@@ -206,15 +141,6 @@ class ApiClientTest extends TestCase
         $this->mockTokenStoreGetRefreshToken($tokenStore, $refreshToken);
         $body = ['user' => $user];
         $status = 200;
-        if (!$withAuthenticatedUser) {
-            $status = 401;
-        }
-        if ($withClientException) {
-            $status = 400;
-        }
-        if ($withServerException) {
-            $status = 500;
-        }
         $response = $this->createResponse();
         $this->mockResponseGetStatusCode($response, $status);
         $this->mockResponseGetBody($response, \json_encode($body));
@@ -244,69 +170,29 @@ class ApiClientTest extends TestCase
         $this->assertEquals($user, $apiClient->authenticatedUser());
     }
 
-    public function testAuthenticatedUserWithoutAuthenticatedUser(): void
-    {
-        /** @var ApiClient $apiClient */
-        [$apiClient] = $this->setUpAuthenticatedUserTest(withAuthenticatedUser: false);
-
-        $this->expectException(AuthenticationException::class);
-
-        $apiClient->authenticatedUser();
-    }
-
-    public function testAuthenticatedUserWithClientException(): void
-    {
-        /** @var ApiClient $apiClient */
-        [$apiClient] = $this->setUpAuthenticatedUserTest(withClientException: true);
-
-        $this->expectException(ClientException::class);
-
-        $apiClient->authenticatedUser();
-    }
-
-    public function testAuthenticatedUserWithServerException(): void
-    {
-        /** @var ApiClient $apiClient */
-        [$apiClient] = $this->setUpAuthenticatedUserTest(withServerException: true);
-
-        $this->expectException(ServerException::class);
-
-        $apiClient->authenticatedUser();
-    }
-
-    private function setUpAuthenticateTest(bool $withValidInput = true, bool $withValidCredentials = true): array
+    private function setUpAuthenticateTest(): array
     {
         $email = $this->getFaker()->safeEmail;
         $password = $this->getFaker()->password;
         $user = [$this->getFaker()->word => $this->getFaker()->word];
-        $errorField = $this->getFaker()->word;
-        $errorMessage = $this->getFaker()->word;
         $statusCode = 200;
-        if (!$withValidInput) {
-            $statusCode = 422;
-        }
-        if (!$withValidCredentials) {
-            $statusCode = 403;
-        }
         $response = $this->createResponse();
         $this->mockResponseGetStatusCode($response, $statusCode);
-        $this->mockResponseGetBody(
-            $response,
-            \json_encode(
-                $withValidInput
-                    ? ['user' => $user]
-                    : [
-                    'errors' => [
-                        $errorField => [$errorMessage],
-                    ],
-                ]
-            )
-        );
+        $this->mockResponseGetBody($response, \json_encode(['user' => $user]));
         $client = $this->createHttpClient();
-        $this->mockHttpClientPost($client, $response, 'auth', ['email' => $email, 'password' => $password]);
+        $this->mockHttpClientPost(
+            $client,
+            $response,
+            'auth',
+            ['email' => $email, 'password' => $password],
+            [
+                'Content-Type' => 'application/json',
+                'Accept'       => 'application/json',
+            ]
+        );
         $apiClient = $this->getApiClient($client);
 
-        return [$apiClient, $email, $password, $user, $errorField, $errorMessage];
+        return [$apiClient, $email, $password, $user];
     }
 
     public function testAuthenticateWithSuccess(): void
@@ -315,31 +201,5 @@ class ApiClientTest extends TestCase
         [$apiClient, $email, $password, $user] = $this->setUpAuthenticateTest();
 
         $this->assertEquals($user, $apiClient->authenticate($email, $password));
-    }
-
-    public function testAuthenticateWithValidationError(): void
-    {
-        /** @var ApiClient $apiClient */
-        [$apiClient, $email, $password, $user, $errorField, $errorMessage] = $this->setUpAuthenticateTest(withValidInput: false);
-
-        try {
-            $apiClient->authenticate($email, $password);
-
-            $this->fail('ValidationException expected.');
-        } catch (ValidationException $e) {
-            $this->assertEquals([$errorField => [$errorMessage]], $e->getErrors());
-        } catch (\Exception $e) {
-            $this->fail('ValidationException expected.');
-        }
-    }
-
-    public function testAuthenticateWithInvalidCredentials(): void
-    {
-        /** @var ApiClient $apiClient */
-        [$apiClient, $email, $password] = $this->setUpAuthenticateTest(withValidCredentials: false);
-
-        $this->expectException(AuthorizationException::class);
-
-        $apiClient->authenticate($email, $password);
     }
 }

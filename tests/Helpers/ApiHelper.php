@@ -9,6 +9,7 @@ use GuzzleHttp\ClientInterface;
 use Mockery as m;
 use Mockery\CompositeExpectation;
 use Mockery\MockInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 trait ApiHelper
@@ -32,11 +33,11 @@ trait ApiHelper
     /**
      * @param ResponseInterface|\Exception $response
      */
-    private function mockHttpClientPost(MockInterface $httpClient, $response, string $path, array $data): CompositeExpectation
+    private function mockHttpClientPost(MockInterface $httpClient, $response, string $path, array $data, array $headers): CompositeExpectation
     {
         return $expectation = $httpClient
             ->shouldReceive('post')
-            ->with($path, $data)
+            ->with($path, $data, $headers)
             ->andThrow($response);
     }
 
@@ -146,5 +147,13 @@ trait ApiHelper
     private function createValidationException(): ValidationException
     {
         return m::spy(ValidationException::class);
+    }
+
+    /**
+     * @return RequestInterface|MockInterface
+     */
+    private function createRequest(): RequestInterface
+    {
+        return m::spy(RequestInterface::class);
     }
 }

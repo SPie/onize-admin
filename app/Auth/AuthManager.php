@@ -2,6 +2,7 @@
 
 namespace App\Auth;
 
+use App\Http\Livewire\Auth\Login;
 use App\Users\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -15,7 +16,7 @@ class AuthManager
     public function login(string $email, string $password): User|Authenticatable
     {
         if (!$this->guard->attempt([User::PROPERTY_EMAIL => $email, User::PROPERTY_PASSWORD => $password])) {
-            throw new AuthenticationException();
+            throw new AuthenticationException('Unauthenticated.', [], Login::NAME_LOGIN);
         }
 
         return $this->guard->user();

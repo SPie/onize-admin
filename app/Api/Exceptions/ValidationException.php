@@ -4,7 +4,7 @@ namespace App\Api\Exceptions;
 
 class ValidationException extends ApiException
 {
-    public function __construct(private array $errors = [])
+    public function __construct(private readonly array $errors = [])
     {
         parent::__construct('Validation error', 422);
     }

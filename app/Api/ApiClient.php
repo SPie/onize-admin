@@ -2,11 +2,6 @@
 
 namespace App\Api;
 
-use App\Api\Exceptions\AuthenticationException;
-use App\Api\Exceptions\AuthorizationException;
-use App\Api\Exceptions\ClientException;
-use App\Api\Exceptions\ServerException;
-use App\Api\Exceptions\ValidationException;
 use App\Auth\TokenStore;
 use App\Users\User;
 use Psr\Http\Message\ResponseInterface;
@@ -28,20 +23,14 @@ class ApiClient
 
     private function doPost(string $path, array $data): array
     {
-        $response = $this->client->post($path, $data);
-        if ($response->getStatusCode() === 400) {
-            throw new ClientException();
-        }
-        if ($response->getStatusCode() === 422) {
-            $responseBody = \json_decode($response->getBody(), true);
-            throw new ValidationException($responseBody['errors']);
-        }
-        if ($response->getStatusCode() === 500) {
-            throw new ServerException();
-        }
-        if ($response->getStatusCode() === 403) {
-            throw new AuthorizationException();
-        }
+        $response = $this->client->post(
+            $path,
+            $data,
+            [
+                'Content-Type' => 'application/json',
+                'Accept'       => 'application/json',
+            ]
+        );
 
         $this->storeAuthTokens($response);
 
@@ -95,15 +84,6 @@ class ApiClient
                 self::HEADER_REFRESH_TOKEN => $this->tokenStore->getRefreshToken(),
             ]
         );
-        if ($response->getStatusCode() === 401) {
-            throw new AuthenticationException();
-        }
-        if ($response->getStatusCode() === 400) {
-            throw new ClientException();
-        }
-        if ($response->getStatusCode() === 500) {
-            throw new ServerException();
-        }
 
         $responseBody = \json_decode($response->getBody(), true);
 
