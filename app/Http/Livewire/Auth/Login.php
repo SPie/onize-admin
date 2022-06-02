@@ -3,10 +3,10 @@
 namespace App\Http\Livewire\Auth;
 
 use App\Auth\AuthManager;
+use App\Http\Livewire\Component;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
-use Livewire\Component;
 
 class Login extends Component
 {

@@ -28,4 +28,14 @@ class AuthManager
 
         return $this;
     }
+
+    public function authenticatedUser(): User|Authenticatable
+    {
+        $user = $this->guard->user();
+        if (!$user) {
+            throw new AuthenticationException();
+        }
+
+        return $user;
+    }
 }

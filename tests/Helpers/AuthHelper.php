@@ -44,6 +44,13 @@ trait AuthHelper
             ->once();
     }
 
+    private function mockAuthManagerAuthenticatedUser(MockInterface $authManager, $user): CompositeExpectation
+    {
+        return $authManager
+            ->shouldReceive('authenticatedUser')
+            ->andReturn($user);
+    }
+
     /**
      * @return TokenStore|MockInterface
      */

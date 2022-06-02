@@ -6,6 +6,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
+use Livewire\LivewireManager;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,15 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        $this->addLivewirePersistentMiddleware();
+    }
+
+    private function addLivewirePersistentMiddleware(): self
+    {
+        $this->app->get(LivewireManager::class)->addPersistentMiddleware([
+            //
+        ]);
+
+        return $this;
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Livewire\Auth\Login;
+use App\Http\Livewire\Users\Profile;
 use App\Http\Livewire\Users\Register;
 use Illuminate\Routing\Router;
 
@@ -24,4 +25,5 @@ $router->get('/login')->name(Login::NAME_LOGIN)->uses(Login::class);
 
 $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->view('/', 'welcome')->name('home');
+    $router->get('/profile')->name(Profile::NAME_PROFILE)->uses(Profile::class);
 });

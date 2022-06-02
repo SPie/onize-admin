@@ -59,4 +59,32 @@ final class AuthManagerTest extends TestCase
 
         $authManager->login($email, $password);
     }
+
+    private function setUpAuthenticatedUserTest(bool $withAuthenticatedUser = true): array
+    {
+        $user = $this->createUser();
+        $guard = $this->createStatefulGuard();
+        $this->mockStatefulGuardUser($guard, $withAuthenticatedUser ? $user : null);
+        $authManager = $this->getAuthManager($guard);
+
+        return [$authManager, $user];
+    }
+
+    public function testAuthenticatedUser(): void
+    {
+        /** @var AuthManager $authManager */
+        [$authManager, $user] = $this->setUpAuthenticatedUserTest();
+
+        $this->assertEquals($user, $authManager->authenticatedUser());
+    }
+
+    public function testAuthenticatedUserWithoutAuthenticatedUser(): void
+    {
+        /** @var AuthManager $authManager */
+        [$authManager] = $this->setUpAuthenticatedUserTest(withAuthenticatedUser: false);
+
+        $this->expectException(AuthenticationException::class);
+
+        $authManager->authenticatedUser();
+    }
 }

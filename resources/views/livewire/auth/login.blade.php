@@ -10,7 +10,7 @@
                     <div>
                         <label for="email">{{ __('label.email') }}</label>
                         <div>
-                            <input wire:model="email" type="email" id="email" required="required" />
+                            <input wire:model="email" type="text" id="email" required="required" />
                         </div>
                     </div>
                     <div>

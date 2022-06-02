@@ -2,7 +2,6 @@
 
 namespace App\Exceptions;
 
-use App\Api\Exceptions\ApiException;
 use App\Api\Exceptions\ValidationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
@@ -43,10 +42,6 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $e)
     {
-        if ($e instanceof ApiException) {
-            session()->flash('errorMessage', $e->getMessage());
-        }
-
         return parent::render($request, $e);
     }
 }
