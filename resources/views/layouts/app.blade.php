@@ -4,10 +4,10 @@
     <div>
         <div>
             <div>
-                {{ __('menu.profile') }}
+                <a href="{{ route('users.profile') }}">{{ __('menu.profile') }}</a>
             </div>
             <div>
-                {{ __('menu.logout') }}
+                <a href="">{{ __('menu.logout') }}</a>
             </div>
         </div>
     </div>

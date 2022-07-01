@@ -131,4 +131,26 @@ class UserManagerTest extends TestCase
 
         $this->assertNull($userManager->login($email, $password));
     }
+
+    private function setUpEditProfileTest(): array
+    {
+        $email = $this->getFaker()->safeEmail;
+        $uuid = $this->getFaker()->uuid;
+        $user = $this->createUser();
+        $userFactory = $this->createUserFactory();
+        $this->mockUserFactoryCreate($userFactory, $user, $uuid, $email);
+        $apiClient = $this->createApiClient();
+        $this->mockApiClientUpdateProfile($apiClient, ['uuid' => $uuid, 'email' => $email], $email);
+        $userManager = $this->getUserManager($apiClient, $userFactory);
+
+        return [$userManager, $email, $user];
+    }
+
+    public function testEditProfile(): void
+    {
+        /** @var UserManager $userManager */
+        [$userManager, $email, $user] = $this->setUpEditProfileTest();
+
+        $this->assertEquals($user, $userManager->editProfile($email));
+    }
 }

@@ -17,6 +17,7 @@ class HttpClient
 {
     private const METHOD_GET  = 'GET';
     private const METHOD_POST = 'POST';
+    private const METHOD_PATCH = 'PATCH';
 
     public function __construct(private readonly ClientInterface $guzzleClient)
     {}
@@ -29,6 +30,11 @@ class HttpClient
     public function post(string $path, array $data = [], array $headers = []): ResponseInterface
     {
         return $this->request(self::METHOD_POST, $path, $data, $headers);
+    }
+
+    public function patch(string $path, array $data = [], array $headers = []): ResponseInterface
+    {
+        return $this->request(self::METHOD_PATCH, $path, $data, $headers);
     }
 
     private function request(string $method, string $path, array $data = [], array $headers = []): ResponseInterface

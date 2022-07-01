@@ -8,6 +8,7 @@ use App\Users\UserManager;
 use Mockery as m;
 use Mockery\CompositeExpectation;
 use Mockery\MockInterface;
+use Mockery\VerificationDirector;
 
 trait UsersHelper
 {
@@ -43,6 +44,22 @@ trait UsersHelper
             ->shouldReceive('login')
             ->with($email, $password)
             ->andReturn($user);
+    }
+
+    private function mockUserMangerEditProfile(MockInterface $userManager, $user, string $email): CompositeExpectation
+    {
+        return $userManager
+            ->shouldReceive('editProfile')
+            ->with($email)
+            ->andThrow($user);
+    }
+
+    private function assertUserMangerEditProfile(MockInterface $userManager, string $email): VerificationDirector
+    {
+        return $userManager
+            ->shouldHaveReceived('editProfile')
+            ->with($email)
+            ->once();
     }
 
     private function createUser(string $uuid = null, string $email = null): User

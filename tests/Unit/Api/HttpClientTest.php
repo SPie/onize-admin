@@ -203,4 +203,48 @@ class HttpClientTest extends TestCase
 
         $this->assertEquals($response, $httpClient->get($path, $data, $headers));
     }
+
+    private function setUpPatchTest(bool $withClientException = false): array
+    {
+
+        $path = $this->getFaker()->word;
+        $data = [$this->getFaker()->word => $this->getFaker()->word];
+        $headers = [$this->getFaker()->word => $this->getFaker()->word];
+        $response = $this->createResponse();
+        $this->mockResponseGetStatusCode($response, $withClientException ? 400 : 200);
+        $exception = new GuzzleClientException(
+            $this->getFaker()->word,
+            $this->createRequest(),
+            $response
+        );
+        $guzzle = $this->createGuzzleClient();
+        $this->mockGuzzleClientRequest(
+            $guzzle,
+            $withClientException ? $exception : $response,
+            'PATCH',
+            $path,
+            ['json' => $data, 'headers' => $headers]
+        );
+        $httpClient = $this->getHttpClient($guzzle);
+
+        return [$httpClient, $path, $data, $headers, $response];
+    }
+
+    public function testPatch(): void
+    {
+        /** @var HttpClient $httpClient */
+        [$httpClient, $path, $data, $headers, $response] = $this->setUpPatchTest();
+
+        $this->assertEquals($response, $httpClient->patch($path, $data, $headers));
+    }
+
+    public function testPatchWithClientException(): void
+    {
+        /** @var HttpClient $httpClient */
+        [$httpClient, $path, $data, $headers] = $this->setUpPatchTest(withClientException: true);
+
+        $this->expectException(ClientException::class);
+
+        $httpClient->patch($path, $data, $headers);
+    }
 }

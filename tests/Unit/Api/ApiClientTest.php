@@ -202,4 +202,41 @@ class ApiClientTest extends TestCase
 
         $this->assertEquals($user, $apiClient->authenticate($email, $password));
     }
+
+    private function setUpUpdateProfileTest(): array
+    {
+        $email = $this->getFaker()->safeEmail;
+        $user = [$this->getFaker()->word => $this->getFaker()->word];
+        $response = $this->createResponse();
+        $this->mockResponseGetBody($response, \json_encode(['user' => $user]));
+        $authToken = $this->getFaker()->word;
+        $refreshToken = $this->getFaker()->word;
+        $tokenStore = $this->createTokenStore();
+        $this->mockTokenStoreGetAuthToken($tokenStore, $authToken);
+        $this->mockTokenStoreGetRefreshToken($tokenStore, $refreshToken);
+        $client = $this->createHttpClient();
+        $this->mockHttpClientPatch(
+            $client,
+            $response,
+            'users',
+            ['email' => $email],
+            [
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'x-authorize'  => \sprintf('Bearer %s', $authToken),
+                'x-refresh'    => $refreshToken,
+            ]
+        );
+        $apiClient = $this->getApiClient($client, $tokenStore);
+
+        return [$apiClient, $email, $user];
+    }
+
+    public function testUpdateProfile(): void
+    {
+        /** @var ApiClient $apiClient */
+        [$apiClient, $email, $user] = $this->setUpUpdateProfileTest();
+
+        $this->assertEquals($user, $apiClient->updateProfile($email));
+    }
 }

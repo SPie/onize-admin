@@ -89,4 +89,22 @@ class ApiClient
 
         return $responseBody[self::RESPONSE_USER];
     }
+
+    public function updateProfile(string $email): array
+    {
+        $response = $this->client->patch(
+            'users',
+            ['email' => $email],
+            [
+                'Content-Type'             => 'application/json',
+                'Accept'                   => 'application/json',
+                self::HEADER_AUTH_TOKEN    => \sprintf('Bearer %s', $this->tokenStore->getAuthToken()),
+                self::HEADER_REFRESH_TOKEN => $this->tokenStore->getRefreshToken(),
+            ]
+        );
+
+        $responseBody = \json_decode($response->getBody(), true);
+
+        return $responseBody[self::RESPONSE_USER];
+    }
 }

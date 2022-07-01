@@ -35,8 +35,16 @@ trait ApiHelper
      */
     private function mockHttpClientPost(MockInterface $httpClient, $response, string $path, array $data, array $headers): CompositeExpectation
     {
-        return $expectation = $httpClient
+        return $httpClient
             ->shouldReceive('post')
+            ->with($path, $data, $headers)
+            ->andThrow($response);
+    }
+
+    private function mockHttpClientPatch(MockInterface $httpClient, $response, string $path, array $data, array $headers): CompositeExpectation
+    {
+        return $httpClient
+            ->shouldReceive('patch')
             ->with($path, $data, $headers)
             ->andThrow($response);
     }
@@ -133,6 +141,19 @@ trait ApiHelper
         $expectation = $apiClient
             ->shouldReceive('authenticate')
             ->with($email, $password);
+
+        if ($response instanceof \Exception) {
+            return $expectation->andThrow($response);
+        }
+
+        return $expectation->andReturn($response);
+    }
+
+    private function mockApiClientUpdateProfile(MockInterface $apiClient, $response, string $email): CompositeExpectation
+    {
+        $expectation = $apiClient
+            ->shouldReceive('updateProfile')
+            ->with($email);
 
         if ($response instanceof \Exception) {
             return $expectation->andThrow($response);

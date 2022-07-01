@@ -49,4 +49,14 @@ class UserManager
             $response[User::PROPERTY_EMAIL],
         );
     }
+
+    public function editProfile(string $email): User
+    {
+        $response = $this->apiClient->updateProfile($email);
+
+        return $this->userFactory->create(
+            $response[User::PROPERTY_UUID],
+            $response[User::PROPERTY_EMAIL]
+        );
+    }
 }
