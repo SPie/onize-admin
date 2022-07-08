@@ -14,49 +14,39 @@ class UserManager
 
     public function register(string $email, string $password): User
     {
-        $response = $this->apiClient->register($email, $password);
-
-        return $this->userFactory->create(
-            $response[User::PROPERTY_UUID],
-            $response[User::PROPERTY_EMAIL]
-        );
+        return $this->createUserFromResponse($this->apiClient->register($email, $password));
     }
 
     public function login(string $email, string $password): ?User
     {
         try {
-            $response = $this->apiClient->authenticate($email, $password);
+            return $this->createUserFromResponse($this->apiClient->authenticate($email, $password));
         } catch (AuthorizationException $e) {
             return null;
         }
-
-        return $this->userFactory->create(
-            $response[User::PROPERTY_UUID],
-            $response[User::PROPERTY_EMAIL]
-        );
     }
 
     public function authenticatedUser(): ?User
     {
         try {
-            $response = $this->apiClient->authenticatedUser();
+            return $this->createUserFromResponse($this->apiClient->authenticatedUser());
         } catch (AuthenticationException $e) {
             return null;
         }
-
-        return $this->userFactory->create(
-            $response[User::PROPERTY_UUID],
-            $response[User::PROPERTY_EMAIL],
-        );
     }
 
     public function editProfile(string $email): User
     {
-        $response = $this->apiClient->updateProfile($email);
+        return $this->createUserFromResponse($this->apiClient->updateProfile($email));
+    }
 
-        return $this->userFactory->create(
-            $response[User::PROPERTY_UUID],
-            $response[User::PROPERTY_EMAIL]
-        );
+    public function editPassword(string $currentPassword, string $newPassword): User
+    {
+        return $this->createUserFromResponse($this->apiClient->updatePassword($currentPassword, $newPassword));
+    }
+
+    private function createUserFromResponse(array $userResponse): User
+    {
+        return $this->userFactory->create($userResponse[User::PROPERTY_UUID], $userResponse[User::PROPERTY_EMAIL]);
     }
 }

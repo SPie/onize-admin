@@ -56,7 +56,7 @@ final class ProfileTest extends FeatureTestCase
         $userManager = $this->createUserManager();
         $this->mockUserMangerEditProfile($userManager, $user, $email);
         $profile = $this->getProfile();
-        $profile->editMode = true;
+        $profile->editEmail = true;
         $profile->email = $email;
 
         return [$profile, $userManager, $user, $email];
@@ -71,7 +71,7 @@ final class ProfileTest extends FeatureTestCase
 
         $this->assertUserMangerEditProfile($userManager, $email);
         $this->assertEquals($email, $profile->email);
-        $this->assertFalse($profile->editMode);
+        $this->assertFalse($profile->editEmail);
     }
 
     public function testEditEmailWithoutEmail(): void
@@ -94,5 +94,74 @@ final class ProfileTest extends FeatureTestCase
         $this->expectException(ValidationException::class);
 
         $profile->editEmail($userManager);
+    }
+
+    private function setUpEditPasswordTest(): array
+    {
+        $currentPassword = $this->getFaker()->password;
+        $password = $this->getFaker()->password;
+        $userManager = $this->createUserManager();
+        $profile = $this->getProfile();
+        $profile->currentPassword = $currentPassword;
+        $profile->newPassword = $password;
+        $profile->passwordConfirm = $password;
+        $profile->editPassword = true;
+
+        return [$profile, $userManager, $currentPassword, $password];
+    }
+
+    public function testEditPassword(): void
+    {
+        /** @var Profile $profile */
+        [$profile, $userManager, $currentPassword, $password] = $this->setUpEditPasswordTest();
+
+        $profile->editPassword($userManager);
+
+        $this->assertUserManagerEditPassword($userManager, $currentPassword, $password);
+        $this->assertFalse($profile->editPassword);
+    }
+
+    public function testEditPasswordWithoutNewPassword(): void
+    {
+        /** @var Profile $profile */
+        [$profile, $userManager] = $this->setUpEditPasswordTest();
+        $profile->newPassword = '';
+
+        $this->expectException(ValidationException::class);
+
+        $profile->editPassword($userManager);
+    }
+
+    public function testEditPasswordWithoutCurrentPassword(): void
+    {
+        /** @var Profile $profile */
+        [$profile, $userManager] = $this->setUpEditPasswordTest();
+        $profile->currentPassword = '';
+
+        $this->expectException(ValidationException::class);
+
+        $profile->editPassword($userManager);
+    }
+
+    public function testEditPasswordWithoutPasswordConfirm(): void
+    {
+        /** @var Profile $profile */
+        [$profile, $userManager] = $this->setUpEditPasswordTest();
+        $profile->passwordConfirm = '';
+
+        $this->expectException(ValidationException::class);
+
+        $profile->editPassword($userManager);
+    }
+
+    public function testEditPasswordInvalidPasswordConfirm(): void
+    {
+        /** @var Profile $profile */
+        [$profile, $userManager, $currentPassword, $password] = $this->setUpEditPasswordTest();
+        $profile->passwordConfirm = $password . $this->getFaker()->word;
+
+        $this->expectException(ValidationException::class);
+
+        $profile->editPassword($userManager);
     }
 }

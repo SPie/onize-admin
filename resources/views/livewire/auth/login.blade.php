@@ -13,12 +13,18 @@
                             <input wire:model="email" type="text" id="email" required="required" />
                         </div>
                     </div>
+                    @error('email')
+                        <div>{{ __($message) }}<div>
+                    @enderror
                     <div>
                         <label for="password">{{ __('label.password') }}</label>
                         <div>
                             <input wire:model="password" type="password" id="password" required="required" />
                         </div>
                     </div>
+                    @error('password')
+                        <div>{{ __($message) }}<div>
+                    @enderror
 
                     <div>
                         <button type="submit">{{ __('button.sign-in') }}</button>

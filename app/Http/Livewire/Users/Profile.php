@@ -14,7 +14,15 @@ final class Profile extends Component
 
     public string $email = '';
 
-    public bool $editMode = false;
+    public string $currentPassword = '';
+
+    public string $newPassword = '';
+
+    public string $passwordConfirm = '';
+
+    public bool $editEmail = false;
+
+    public bool $editPassword = false;
 
     public function mount(AuthManager $authManager): void
     {
@@ -31,6 +39,18 @@ final class Profile extends Component
         $this->validate(['email' => ['required', 'email']]);
 
         $this->email = $userManager->editProfile($this->email)->getEmail();
-        $this->editMode = false;
+        $this->editEmail = false;
+    }
+
+    public function editPassword(UserManager $userManager): void
+    {
+        $this->validate([
+            'currentPassword' => ['required'],
+            'newPassword'     => ['required'],
+            'passwordConfirm' => ['required', 'same:newPassword'],
+        ]);
+
+        $userManager->editPassword($this->currentPassword, $this->newPassword);
+        $this->editPassword = false;
     }
 }

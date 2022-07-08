@@ -154,7 +154,7 @@ class ApiClientTest extends TestCase
                 'Content-Type' => 'application/json',
                 'Accept'       => 'application/json',
                 'x-authorize'  => \sprintf('Bearer %s', $authToken),
-                'x-refresh'    => $refreshToken,
+                'x-refresh'    => \sprintf('Bearer %s', $refreshToken),
             ]
         );
         $apiClient = $this->getApiClient($client, $tokenStore);
@@ -224,7 +224,7 @@ class ApiClientTest extends TestCase
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
                 'x-authorize'  => \sprintf('Bearer %s', $authToken),
-                'x-refresh'    => $refreshToken,
+                'x-refresh'    => \sprintf('Bearer %s', $refreshToken),
             ]
         );
         $apiClient = $this->getApiClient($client, $tokenStore);
@@ -238,5 +238,46 @@ class ApiClientTest extends TestCase
         [$apiClient, $email, $user] = $this->setUpUpdateProfileTest();
 
         $this->assertEquals($user, $apiClient->updateProfile($email));
+    }
+
+    private function setUpUpdatePasswordTest(): array
+    {
+        $currentPassword = $this->getFaker()->password;
+        $newPassword = $this->getFaker()->password;
+        $user = [$this->getFaker()->word => $this->getFaker()->word];
+        $response = $this->createResponse();
+        $this->mockResponseGetBody($response, \json_encode(['user' => $user]));
+        $authToken = $this->getFaker()->word;
+        $refreshToken = $this->getFaker()->word;
+        $tokenStore = $this->createTokenStore();
+        $this->mockTokenStoreGetAuthToken($tokenStore, $authToken);
+        $this->mockTokenStoreGetRefreshToken($tokenStore, $refreshToken);
+        $client = $this->createHttpClient();
+        $this->mockHttpClientPatch(
+            $client,
+            $response,
+            'users/password',
+            [
+                'password'        => $newPassword,
+                'currentPassword' => $currentPassword,
+            ],
+            [
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'x-authorize'  => \sprintf('Bearer %s', $authToken),
+                'x-refresh'    => \sprintf('Bearer %s', $refreshToken),
+            ]
+        );
+        $apiClient = $this->getApiClient($client, $tokenStore);
+
+        return [$apiClient, $currentPassword, $newPassword, $user];
+    }
+
+    public function testUpdatePassword(): void
+    {
+        /** @var ApiClient $apiClient */
+        [$apiClient, $currentPassword, $newPassword, $user] = $this->setUpUpdatePasswordTest();
+
+        $this->assertEquals($user, $apiClient->updatePassword($currentPassword, $newPassword));
     }
 }

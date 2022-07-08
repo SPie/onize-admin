@@ -162,6 +162,23 @@ trait ApiHelper
         return $expectation->andReturn($response);
     }
 
+    private function mockApiClientUpdatePassword(
+        MockInterface $apiClient,
+        $response,
+        string $newPassword,
+        string $currentPassword
+    ): CompositeExpectation {
+        $expectation = $apiClient
+            ->shouldReceive('updatePassword')
+            ->with($newPassword, $currentPassword);
+
+        if ($response instanceof \Exception) {
+            return $expectation->andThrow($response);
+        }
+
+        return $expectation->andReturn($response);
+    }
+
     /**
      * @return ValidationException|MockInterface
      */

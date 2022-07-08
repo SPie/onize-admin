@@ -62,6 +62,14 @@ trait UsersHelper
             ->once();
     }
 
+    private function assertUserManagerEditPassword(MockInterface $userManager, string $currentPassword, string $password): VerificationDirector
+    {
+        return $userManager
+            ->shouldHaveReceived('editPassword')
+            ->with($currentPassword, $password)
+            ->once();
+    }
+
     private function createUser(string $uuid = null, string $email = null): User
     {
         return new User(

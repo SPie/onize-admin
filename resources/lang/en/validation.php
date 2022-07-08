@@ -160,4 +160,6 @@ return [
 
     'attributes' => [],
 
+    'user-not-unique' => 'The email is already used',
+    'invalid-credentials' => 'Invalid Credentials',
 ];

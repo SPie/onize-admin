@@ -11,6 +11,8 @@ class ApiClient
     private const ENDPOINT_REGISTER           = 'users';
     private const ENDPOINT_AUTHENTICATED_USER = 'me';
     private const ENDPOINT_AUTHENTICATE       = 'auth';
+    private const ENDPOINT_USERS              = 'users';
+    private const ENDPOINT_USERS_PASSWORD     = 'users/password';
 
     private const HEADER_AUTH_TOKEN    = 'x-authorize';
     private const HEADER_REFRESH_TOKEN = 'x-refresh';
@@ -21,17 +23,40 @@ class ApiClient
     {
     }
 
+    private function doGet(string $path): array
+    {
+        return $this->handleResponse($this->client->get($path, [], $this->createHeaders()));
+    }
+
     private function doPost(string $path, array $data): array
     {
-        $response = $this->client->post(
-            $path,
-            $data,
-            [
-                'Content-Type' => 'application/json',
-                'Accept'       => 'application/json',
-            ]
-        );
+        return $this->handleResponse($this->client->post($path, $data, $this->createHeaders()));
+    }
 
+    private function doPatch(string $path, array $data): array
+    {
+        return $this->handleResponse($this->client->patch($path, $data, $this->createHeaders()));
+    }
+
+    private function createHeaders(): array
+    {
+        $headers = [
+            'Content-Type'             => 'application/json',
+            'Accept'                   => 'application/json',
+        ];
+
+        if (!empty($this->tokenStore->getAuthToken())) {
+            $headers[self::HEADER_AUTH_TOKEN] = \sprintf('Bearer %s', $this->tokenStore->getAuthToken());
+        }
+        if (!empty($this->tokenStore->getRefreshToken())) {
+            $headers[self::HEADER_REFRESH_TOKEN] = \sprintf('Bearer %s', $this->tokenStore->getRefreshToken());
+        }
+
+        return $headers;
+    }
+
+    private function handleResponse(ResponseInterface $response): array
+    {
         $this->storeAuthTokens($response);
 
         return \json_decode($response->getBody(), true);
@@ -74,37 +99,28 @@ class ApiClient
 
     public function authenticatedUser(): array
     {
-        $response = $this->client->get(
-            self::ENDPOINT_AUTHENTICATED_USER,
-            [],
-            [
-                'Content-Type'             => 'application/json',
-                'Accept'                   => 'application/json',
-                self::HEADER_AUTH_TOKEN    => \sprintf('Bearer %s', $this->tokenStore->getAuthToken()),
-                self::HEADER_REFRESH_TOKEN => $this->tokenStore->getRefreshToken(),
-            ]
-        );
+        $response = $this->doGet(self::ENDPOINT_AUTHENTICATED_USER);
 
-        $responseBody = \json_decode($response->getBody(), true);
-
-        return $responseBody[self::RESPONSE_USER];
+        return $response[self::RESPONSE_USER];
     }
 
     public function updateProfile(string $email): array
     {
-        $response = $this->client->patch(
-            'users',
-            ['email' => $email],
+        $response = $this->doPatch(self::ENDPOINT_USERS, ['email' => $email]);
+
+        return $response[self::RESPONSE_USER];
+    }
+
+    public function updatePassword(string $currentPassword, string $newPassword): array
+    {
+        $response = $this->doPatch(
+            self::ENDPOINT_USERS_PASSWORD,
             [
-                'Content-Type'             => 'application/json',
-                'Accept'                   => 'application/json',
-                self::HEADER_AUTH_TOKEN    => \sprintf('Bearer %s', $this->tokenStore->getAuthToken()),
-                self::HEADER_REFRESH_TOKEN => $this->tokenStore->getRefreshToken(),
+                'password'        => $newPassword,
+                'currentPassword' => $currentPassword,
             ]
         );
 
-        $responseBody = \json_decode($response->getBody(), true);
-
-        return $responseBody[self::RESPONSE_USER];
+        return $response[self::RESPONSE_USER];
     }
 }

@@ -153,4 +153,28 @@ class UserManagerTest extends TestCase
 
         $this->assertEquals($user, $userManager->editProfile($email));
     }
+
+    private function setUpEditPasswordTest(): array
+    {
+        $currentPassword = $this->getFaker()->password;
+        $newPassword = $this->getFaker()->password;
+        $uuid = $this->getFaker()->uuid;
+        $email = $this->getFaker()->safeEmail;
+        $user = $this->createUser();
+        $userFactory = $this->createUserFactory();
+        $this->mockUserFactoryCreate($userFactory, $user, $uuid, $email);
+        $apiClient = $this->createApiClient();
+        $this->mockApiClientUpdatePassword($apiClient, ['uuid' => $uuid, 'email' => $email], $currentPassword, $newPassword);
+        $userManager = $this->getUserManager($apiClient, $userFactory);
+
+        return [$userManager, $currentPassword, $newPassword, $user];
+    }
+
+    public function testEditPassword(): void
+    {
+        /** @var UserManager $userManager */
+        [$userManager, $currentPassword, $newPassword, $user] = $this->setUpEditPasswordTest();
+
+        $this->assertEquals($user, $userManager->editPassword($currentPassword, $newPassword));
+    }
 }
