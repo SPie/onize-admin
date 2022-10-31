@@ -8,7 +8,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 
-class Login extends Component
+final class Login extends Component
 {
     public const NAME_LOGIN = 'auth.login';
 

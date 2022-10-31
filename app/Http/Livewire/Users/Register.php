@@ -8,7 +8,7 @@ use App\Users\UserManager;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 
-class Register extends Component
+final class Register extends Component
 {
     public const NAME_REGISTER = 'users.register';
 

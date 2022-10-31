@@ -6,9 +6,7 @@
             <div>
                 <a href="{{ route('users.profile') }}">{{ __('menu.profile') }}</a>
             </div>
-            <div>
-                <a href="">{{ __('menu.logout') }}</a>
-            </div>
+            <livewire:auth.logout />
         </div>
     </div>
 
